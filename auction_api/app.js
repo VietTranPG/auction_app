@@ -9,8 +9,10 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var auctions = require('./routes/auctions');
 var products = require('./routes/products');
+product_type = require('./routes/product_type');
 var passport = require('passport');
 var localStrategy = require('passport-local').Strategy;
+var jwt = require('jwt-simple');
 var app = express();
 
 // view engine setup
@@ -29,17 +31,18 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use('/', index);
 app.use('/users', users);
-app.use('/auctions',auctions);
-app.use('/products',products);
+app.use('/auctions', auctions);
+app.use('/products', products);
+app.use('/product_type', product_type);
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

@@ -1,7 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var common = require('../common/common');
-var user_model = require('../model/user_model')
+var user_model = require('../model/user_model');
+var passport = require('passport');
+var localStrategy = require('passport-local').Strategy;
 const { check, validationResult } = require('express-validator/check');
 /* GET users listing. */
 router.get('/', (req, res, next) => {
@@ -14,11 +16,13 @@ function createArrErr(arr) {
   }
   return result;
 }
+
 router.post('/login', [
   check('email', common.INVALID_EMAIL).isEmail(),
-  check('password', common.INVALID_PASSWORD).isLength()
+  check('password', common.INVALID_PASSWORD).exists()
 ], (req, res, next) => {
   const errors = validationResult(req).array();
+  console.log(check())
   if (errors.length) {
     var arrayMessage = createArrErr(errors);
     res.json({
@@ -26,9 +30,22 @@ router.post('/login', [
       'message': arrayMessage
     })
   } else {
-    user_model.GetUserByEmail(user).then((result)=>{
-      console.log(result)
-    }).error(()=>{
+    var user = req.body;
+    user_model.GetUserByEmail(user).then((result) => {
+      if (result.error) {
+        res.json({
+          'status': common.STATUS_ERROR,
+          'message': common.MESSAGE_LOGIN_ERROR
+        })
+      } else {
+        res.json({
+          'data': result,
+          'status': common.STATUS_SUUCESS,
+          'message': common.MESSAGE_SUCCESS
+        })
+      }
+
+    }).error(() => {
       res.json({
         'status': common.STATUS_ERROR,
         'message': common.MESSAGE_LOGIN_ERROR
@@ -38,8 +55,8 @@ router.post('/login', [
 });
 router.post('/register', [
   check('email', common.INVALID_EMAIL).isEmail(),
-  check('password', common.INVALID_PASSWORD).isLength({ min: 5 }),
-  check('phone', common.INVALID_PHONE).isLength({ min: 5 })
+  check('password', common.INVALID_PASSWORD).exists(),
+  check('phone', common.INVALID_PHONE).exists()
 ], (req, res, next) => {
   const errors = validationResult(req).array();
   if (errors.length) {
